@@ -1,10 +1,94 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Moja strona</title>
-  </head>
-  <body>
-    <h1>Witaj na mojej stronie!</h1>
-  </body>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Index</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #32b44c;
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .file-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .file-list li {
+      background-color: white;
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .file-list li:hover {
+      transform: translateY(-3px);
+    }
+
+    a {
+      color: #32b44c;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 4rem;
+      padding-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Strona główna</h1>
+    <p>Lista udostępnionych plików do pobrania</p>
+  </header>
+
+  <main>
+    <p><strong>Uczelnia</strong></p>
+    <ul class="file-list">
+      <li>
+        <a href="https://drive.google.com/file/d/1UIxsFjypz0HSuFfInH9QABhfbEnXnrq6/view?usp=sharing" target="_blank">🗂️ Implementacja Blockchain Java</a>
+      </li>
+      <li>
+        <a href="https://drive.google.com/file/d/1qIkHZ2v90eBoHTYr_ztMshI-pR9HgeaP/view?usp=sharing" target="_blank">🗂️ Projekt STM - Stoper sportowy</a>
+      </li>
+    </ul>
+
+    <p><strong>Arduino</strong></p>
+  </main>
+
+  <footer>
+    © 2025 FalanaJ
+  </footer>
+</body>
 </html>
