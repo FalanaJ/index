@@ -19,18 +19,53 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       touch-action: manipulation;
+      padding: 20px 0;
     }
+
+    .telemetry {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 285px; 
+      margin-bottom: 22px;
+    }
+    .metric-bubble {
+      background: #1c1c1e;
+      border: 1px solid #2c2c2e;
+      border-radius: 14px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .metric-label {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #8e8e93;
+    }
+    .metric-val {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffea00;
+      font-variant-numeric: tabular-nums;
+    }
+
     h2 {
-      margin-bottom: 25px;
+      margin: 0 0 20px 0;
       font-weight: 500;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
+      font-size: 20px;
+      color: #e5e5ea;
     }
+
     .pad {
       display: grid;
       grid-template-columns: repeat(3, 85px);
@@ -63,13 +98,29 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
-  <h2>CHECKER 1.0</h2>
+  <div class="telemetry">
+    <div class="metric-bubble">
+      <span class="metric-label">Temperatura</span>
+      <span class="metric-val"><span id="temp">--</span> °C</span>
+    </div>
+    <div class="metric-bubble">
+      <span class="metric-label">Wilgotność</span>
+      <span class="metric-val"><span id="hum">--</span> %</span>
+    </div>
+    <div class="metric-bubble">
+      <span class="metric-label">Ciśnienie</span>
+      <span class="metric-val"><span id="pres">--</span> hPa</span>
+    </div>
+  </div>
+
+  <h2>CHECKER 1.1</h2>
+
   <div class="pad">
-    <div class="btn up"    data-action="F">&#9650;</div>
+    <div class="btn up"    data-action="B">&#9650;</div>
     <div class="btn left"  data-action="L">&#9664;</div>
     <div class="btn stop"  data-action="S">&#9679;</div>
     <div class="btn right" data-action="R">&#9654;</div>
-    <div class="btn down"  data-action="B">&#9660;</div>
+    <div class="btn down"  data-action="F">&#9660;</div>
   </div>
 
   <script>
@@ -86,7 +137,6 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
     buttons.forEach(btn => {
       const action = btn.getAttribute('data-action');
       
-      // Zdarzenia dotykowe (smartfon)
       btn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         btn.classList.add('active');
@@ -98,7 +148,6 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
         sendCommand('S');
       });
 
-      // Zdarzenia myszy (testowanie na PC)
       btn.addEventListener('mousedown', () => {
         btn.classList.add('active');
         sendCommand(action);
@@ -111,6 +160,21 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
 
     window.addEventListener('mouseup', () => sendCommand('S'));
     window.addEventListener('touchend', () => sendCommand('S'));
+
+    async function updateTelemetry() {
+      try {
+        const res = await fetch('/data', { cache: 'no-store' });
+        if (res.ok) {
+          const d = await res.json();
+          document.getElementById('temp').textContent = d.temp.toFixed(1);
+          document.getElementById('hum').textContent = d.hum.toFixed(1);
+          document.getElementById('pres').textContent = d.pres.toFixed(2);
+        }
+      } catch (e) {}
+    }
+
+    setInterval(updateTelemetry, 1500);
+    updateTelemetry();
   </script>
 </body>
 </html>
