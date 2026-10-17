@@ -5,7 +5,10 @@
 #include <Adafruit_BME280.h>
 #include "resources.h"
 
-// --- MOTOR PIN CONFIGURATION (TB6612 -> Arduino Nano ESP32) ---
+// --- KONFIGURACJA LOGIKI BUZZERA 3-PINOWEGO ---
+// Jeśli buzzer milczy po naciśnięciu lub piszczy sam z siebie, zmień true na false:
+const bool BUZZER_ACTIVE_LOW = true;
+
 const int PIN_PWMA = 5;
 const int PIN_AI2  = 4;
 const int PIN_AI1  = 3;
@@ -14,36 +17,38 @@ const int PIN_PWMB = 8;
 const int PIN_BI2  = 9;
 const int PIN_BI1  = 10;
 
-const int MOTOR_SPEED = 210; // PWM: 0 - 255
+const int PIN_BUZZER = 11;
+const int PIN_LIGHTS = 12;
 
-// --- WI-FI ACCESS POINT ---
+const int MOTOR_SPEED = 210;
+
 const char* ssid = "CheckerJF";
 const char* password = "checker0505";
 
 WebServer server(80);
 Adafruit_BME280 bme;
 bool bmeFound = false;
+bool lightsOn = false;
 
 unsigned long lastSerialPrint = 0;
 
-// --- MOVE FUNCTIONS ---
 void moveForward() {
-  digitalWrite(PIN_AI1, LOW);
-  digitalWrite(PIN_AI2, HIGH);
-  analogWrite(PIN_PWMA, MOTOR_SPEED);
-
-  digitalWrite(PIN_BI1, LOW);
-  digitalWrite(PIN_BI2, HIGH);
-  analogWrite(PIN_PWMB, MOTOR_SPEED);
-}
-
-void moveBackward() {
   digitalWrite(PIN_AI1, HIGH);
   digitalWrite(PIN_AI2, LOW);
   analogWrite(PIN_PWMA, MOTOR_SPEED);
 
   digitalWrite(PIN_BI1, HIGH);
   digitalWrite(PIN_BI2, LOW);
+  analogWrite(PIN_PWMB, MOTOR_SPEED);
+}
+
+void moveBackward() {
+  digitalWrite(PIN_AI1, LOW);
+  digitalWrite(PIN_AI2, HIGH);
+  analogWrite(PIN_PWMA, MOTOR_SPEED);
+
+  digitalWrite(PIN_BI1, LOW);
+  digitalWrite(PIN_BI2, HIGH);
   analogWrite(PIN_PWMB, MOTOR_SPEED);
 }
 
@@ -72,7 +77,19 @@ void stopMotors() {
   analogWrite(PIN_PWMB, 0);
 }
 
-// --- HTTP ENDPOINT HANDLERS ---
+void toggleLights() {
+  lightsOn = !lightsOn;
+  digitalWrite(PIN_LIGHTS, lightsOn ? HIGH : LOW);
+}
+
+void hornOn() {
+  digitalWrite(PIN_BUZZER, BUZZER_ACTIVE_LOW ? LOW : HIGH);
+}
+
+void hornOff() {
+  digitalWrite(PIN_BUZZER, BUZZER_ACTIVE_LOW ? HIGH : LOW);
+}
+
 void handleCommand() {
   if (server.hasArg("val")) {
     char cmd = server.arg("val")[0];
@@ -81,7 +98,10 @@ void handleCommand() {
       case 'B': moveBackward(); break;
       case 'L': turnLeft();     break;
       case 'R': turnRight();    break;
-      case 'S':
+      case 'S': stopMotors();   break;
+      case 'H': toggleLights(); break;
+      case 'K': hornOn();       break;
+      case 'k': hornOff();      break;
       default:  stopMotors();   break;
     }
   }
@@ -108,17 +128,19 @@ void setup() {
 
   Serial.println("\n--- CHECKER 1.1 START ---");
 
-  // MOTOR PINS INITIALIZATION
   pinMode(PIN_PWMA, OUTPUT);
   pinMode(PIN_AI1, OUTPUT);
   pinMode(PIN_AI2, OUTPUT);
   pinMode(PIN_PWMB, OUTPUT);
   pinMode(PIN_BI1, OUTPUT);
   pinMode(PIN_BI2, OUTPUT);
+  pinMode(PIN_LIGHTS, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 
   stopMotors();
+  digitalWrite(PIN_LIGHTS, LOW);
+  hornOff(); // Ustawienie stanu spoczynkowego buzzera
 
-  // BME280 (I2C with 0x76) INITIALIZATION
   if (bme.begin(0x76, &Wire)) {
     bmeFound = true;
     Serial.println("[OK] BME280 polaczony pod 0x76.");
@@ -126,7 +148,6 @@ void setup() {
     Serial.println("[UWAGA] BME280 nieodnaleziony.");
   }
 
-  // WI-FI
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
 
@@ -135,7 +156,6 @@ void setup() {
   Serial.print("Adres: http://");
   Serial.println(WiFi.softAPIP());
 
-  //ROUTES
   server.on("/", HTTP_GET, []() {
     server.send(200, "text/html", PAGE_HTML);
   });
@@ -156,6 +176,5 @@ void loop() {
     float t = bme.readTemperature();
     float h = bme.readHumidity();
     float p = bme.readPressure() / 100.0F;
-
   }
 }
